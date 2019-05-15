@@ -31,32 +31,33 @@ const moveCard = (src: ICard[], card: ICard, dest: ICard[]) => {
 }
 
 const change = (G: GameState, ctx: IGameCtx, myHandCard: ICard, boardCard: ICard) => {
-  const secretHand = G.players[ctx.currentPlayer].hand;
+  const hand = G.players[ctx.currentPlayer].hand;
   const publicHand = G.publicHands[ctx.currentPlayer];
-  const srcHand = secretHand.includes(myHandCard) ? secretHand :
-    publicHand.includes(myHandCard) ? publicHand : assert(false) as never;
+  assert(hand.includes(myHandCard));
 
   const board = G.board;
   assert(board.includes(boardCard));
 
-  moveCard(srcHand, myHandCard, board);
-  moveCard(board, boardCard, publicHand);
+  moveCard(hand, myHandCard, board);
+  _.pull(publicHand, myHandCard);
+  moveCard(board, boardCard, hand);
+  publicHand.push(boardCard);
 }
 
 const throwAndChange = (G: GameState, ctx: IGameCtx, myHandCard: ICard, boardCard: ICard) => {
-  const secretHand = G.players[ctx.currentPlayer].hand;
+  const hand = G.players[ctx.currentPlayer].hand;
   const publicHand = G.publicHands[ctx.currentPlayer];
-  const srcHand = secretHand.includes(myHandCard) ? secretHand :
-    publicHand.includes(myHandCard) ? publicHand : assert(false) as never;
+  assert(hand.includes(myHandCard));
 
   const board = G.board;
   assert(board.includes(boardCard));
 
   const deck = G.secret.deck;
 
-  moveCard(srcHand, myHandCard, board);
+  moveCard(hand, myHandCard, board);
+  _.pull(publicHand, myHandCard);
   moveCard(board, boardCard, G.trash);
-  moveCard(deck, deck[0], secretHand);
+  hand.push(deck.pop()!)
 }
 
 export const ShizuokaPokerGame = Game<GameState>({
@@ -101,11 +102,12 @@ export const ShizuokaPokerGame = Game<GameState>({
   moves: {
     change,
     throwAndChange,
-    skip: (G) => G,
-    stop: (G) => G.stopped = true,
+    skip: (G) => { console.log('skip!') },
+    stop: (G) => { G.stopped = true },
   },
   flow: {
     movesPerTurn: 1,
+    // endTurnIf: () => { console.log('endTurnif'); return true },
     phases: [
       {
         name: 'change',

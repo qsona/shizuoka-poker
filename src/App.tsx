@@ -20,6 +20,9 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
   const [selectedMyCard, setSelectedMyCard] = useState<ICard | null>(null);
   const [isTrashSelected, setTrashSelected] = useState<boolean>(false);
 
+  // const currentPlayer = props.ctx.currentPlayer;
+  const currentPlayer = '0';
+  const opponentPlayer = currentPlayer === '0' ? '1' : '0';
 
   function toggleMyCard(card: ICard) {
     setSelectedMyCard(card === selectedMyCard ? null : card);
@@ -29,31 +32,25 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
     console.log(card)
     console.log(card === selectedBoardCard)
     setSelectedBoardCard(card === selectedBoardCard ? null : card);
-    setTrashSelected(false);
   }
 
   function toggleTrash() {
     setTrashSelected(!isTrashSelected);
-    setSelectedBoardCard(null);
   }
 
-  // function checkSelectedCards() {
   useEffect(() => {
-    console.log(`${selectedBoardCard} ${selectedMyCard} ${isTrashSelected}`)
-    if (selectedMyCard) {
+    console.log(`${selectedBoardCard} ${selectedMyCard}`)
+    if (selectedMyCard && selectedBoardCard) {
+      // TODO: move!
+      console.log("change to card")
       if (isTrashSelected) {
-        // TODO: move!
-        console.log("change to trash")
-        props.moves.throwAndChange(selectedMyCard)
-        resetSelectedCards()
-      } else if (selectedBoardCard) {
-        // TODO: move!
-        console.log("change to card")
+        props.moves.throwAndChange(selectedMyCard, selectedBoardCard)
+      } else {
         props.moves.change(selectedMyCard, selectedBoardCard)
-        resetSelectedCards()
       }
+      resetSelectedCards()
     }
-  }, [selectedBoardCard, selectedMyCard, isTrashSelected]);
+  }, [selectedBoardCard, selectedMyCard]);
 
   function resetSelectedCards() {
     setSelectedBoardCard(null);
@@ -76,9 +73,9 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
       </td>
     )
   });
-  const thand = props.G.players[0].hand.map((c, i) => {
+  const thand = props.G.players[currentPlayer].hand.map((c, i) => {
     const style: React.CSSProperties = { ...cellStyle };
-    if (props.G.publicHands[0].includes(c)) {
+    if (!props.G.publicHands[currentPlayer].includes(c)) {
       style.backgroundColor = 'gray'
     }
     return (
@@ -87,8 +84,9 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
       </td>
     )
   })
+
   const topponent = [0, 1, 2, 3, 4].map(i => {
-    const c = props.G.publicHands[1][i] || '';
+    const c = props.G.publicHands[opponentPlayer][i] || '';
     return (
       <td style={cellStyle} key={i} >
         {c}
@@ -96,19 +94,10 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
     )
   })
 
-  // let tbody: JSX.Element[] = [];
-  // for (let i = 0; i < 3; i++) {
-  //   let cells: JSX.Element[] = [];
-  //   for (let j = 0; j < 3; j++) {
-  //     const id = 3 * i + j;
-  //     cells.push(
-  //       <td style={cellStyle} key={id} onClick={() => onClick(id)}>
-  //         {props.G.cells[id]}
-  //       </td>
-  //     );
-  //   }
-  //   tbody.push(<tr key={i}>{cells}</tr>);
-  // }
+  const trashStyle = { ...cellStyle };
+  if (isTrashSelected) {
+    trashStyle.backgroundColor = 'pink';
+  }
 
   return (
     <div>
@@ -119,13 +108,14 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
       <p>hand</p>
       <table id="hand"><tbody><tr>{thand}</tr></tbody></table>
       <table id="trash"><tbody><tr>
-        <td style={cellStyle} key="0" onClick={() => toggleTrash()}>Trash</td>
+        <td style={trashStyle} key="0" onClick={() => toggleTrash()}>Trash</td>
       </tr></tbody></table>
+
 
       <p>---logs---</p>
 
       <p>board: {JSON.stringify(props.G.board)}</p>
-      <p>hand: {JSON.stringify(props.G.players[0].hand)}</p>
+      <p>hand: {JSON.stringify(props.G.players[currentPlayer].hand)}</p>
       <p>publicHand 0: {JSON.stringify(props.G.publicHands[0])}</p>
       <p>publicHand 1: {JSON.stringify(props.G.publicHands[1])}</p>
       <p>trash: {JSON.stringify(props.G.trash)}</p>
@@ -136,6 +126,7 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
 const App: any = Client({
   game: ShizuokaPokerGame,
   board: ShizuokaPokerBoard,
+  multiplayer: { server: 'localhost:8000' },
   ai: ShizuokaPokerAI,
 });
 
@@ -143,6 +134,8 @@ const RealApp: React.FC = () => {
   return (
     <div>
       <App gameID="gameid" playerID="0"></App>
+      <p>================================</p>
+      <App gameID="gameid" playerID="1"></App>
     </div>
   )
 }

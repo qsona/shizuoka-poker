@@ -102,7 +102,7 @@ declare module 'boardgame.io/react' {
     game: any;
     numPlayer?: number;
     board?: React.ReactNode;
-    multiplayer?: boolean;
+    multiplayer?: { server: string };
     debug?: boolean;
     ai?: any;
   }
@@ -145,6 +145,6 @@ declare module 'boardgame.io/server' {
   interface IServerArgs<TGameState> {
     games: GameObj<TGameState>[]
   }
-  function Server<TGameState>(serverArgs: IServerArgs<TGameState>): Koa;
-  export = Server;
+  export function Server<TGameState>(serverArgs: IServerArgs<TGameState>): Koa;
+  //export = Server;
 }
