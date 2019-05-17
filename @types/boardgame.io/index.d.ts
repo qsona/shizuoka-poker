@@ -76,6 +76,7 @@ declare module 'boardgame.io/core' {
     onTurnEnd?: (G: TGameState, ctx: IGameCtx) => void;
     triggers?: IGameFlowTrigger<TGameState>[];
     phases?: IGameFlowPhase<TGameState>[];
+    optimisticUpdate?: (G: TGameState, ctx: IGameCtx, move: any) => boolean;
   }
   interface IGameArgs<TGameState> {
     name?: string;

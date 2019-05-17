@@ -4,7 +4,7 @@ import './App.css';
 
 import { useState, useEffect } from 'react';
 import { Client } from 'boardgame.io/react';
-import { IGameCtx } from 'boardgame.io/core';
+import { IGameCtx, IPlayer } from 'boardgame.io/core';
 import { ShizuokaPokerGame, GameState, ShizuokaPokerAI, ICard } from './ShizuokaPoker'
 
 interface IProps {
@@ -13,16 +13,17 @@ interface IProps {
   isActive: boolean;
   G: GameState;
   ctx: IGameCtx;
+  playerID: IPlayer;
 }
 
 const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
+  const playerID = props.playerID;
+  console.log(props)
   const [selectedBoardCard, setSelectedBoardCard] = useState<ICard | null>(null);
   const [selectedMyCard, setSelectedMyCard] = useState<ICard | null>(null);
   const [isTrashSelected, setTrashSelected] = useState<boolean>(false);
 
-  // const currentPlayer = props.ctx.currentPlayer;
-  const currentPlayer = '0';
-  const opponentPlayer = currentPlayer === '0' ? '1' : '0';
+  const opponentPlayer: IPlayer = playerID === '0' ? '1' : '0';
 
   function toggleMyCard(card: ICard) {
     setSelectedMyCard(card === selectedMyCard ? null : card);
@@ -73,9 +74,9 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
       </td>
     )
   });
-  const thand = props.G.players[currentPlayer].hand.map((c, i) => {
+  const thand = props.G.players[playerID].hand.map((c, i) => {
     const style: React.CSSProperties = { ...cellStyle };
-    if (!props.G.publicHands[currentPlayer].includes(c)) {
+    if (!props.G.publicHands[playerID].includes(c)) {
       style.backgroundColor = 'gray'
     }
     return (
@@ -115,7 +116,7 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
       <p>---logs---</p>
 
       <p>board: {JSON.stringify(props.G.board)}</p>
-      <p>hand: {JSON.stringify(props.G.players[currentPlayer].hand)}</p>
+      <p>hand: {JSON.stringify(props.G.players[playerID].hand)}</p>
       <p>publicHand 0: {JSON.stringify(props.G.publicHands[0])}</p>
       <p>publicHand 1: {JSON.stringify(props.G.publicHands[1])}</p>
       <p>trash: {JSON.stringify(props.G.trash)}</p>

@@ -45,6 +45,11 @@ const change = (G: GameState, ctx: IGameCtx, myHandCard: ICard, boardCard: ICard
 }
 
 const throwAndChange = (G: GameState, ctx: IGameCtx, myHandCard: ICard, boardCard: ICard) => {
+  // TODO: https://github.com/nicolodavis/boardgame.io/issues/298
+  if (!G.secret) {
+    return;
+  }
+
   const hand = G.players[ctx.currentPlayer].hand;
   const publicHand = G.publicHands[ctx.currentPlayer];
   assert(hand.includes(myHandCard));
@@ -108,12 +113,13 @@ export const ShizuokaPokerGame = Game<GameState>({
   flow: {
     movesPerTurn: 1,
     // endTurnIf: () => { console.log('endTurnif'); return true },
+    optimisticUpdate: () => false,
     phases: [
-      {
-        name: 'change',
-        allowedMoves: ['change', 'throwAndChange', 'skip'],
-        endPhaseIf: (G, ctx) => ctx.turn === 6,
-      },
+      // {
+      //   name: 'change',
+      //   allowedMoves: ['change', 'throwAndChange', 'skip'],
+      //   endPhaseIf: (G, ctx) => ctx.turn === 6,
+      // },
       {
         name: 'stoppableChange',
         allowedMoves: ['change', 'throwAndChange', 'skip', 'stop'],
