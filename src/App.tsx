@@ -5,7 +5,10 @@ import './App.css';
 import { useState, useEffect } from 'react';
 import { Client } from 'boardgame.io/react';
 import { IGameCtx, IPlayer } from 'boardgame.io/core';
-import { ShizuokaPokerGame, GameState, ShizuokaPokerAI, ICard } from './ShizuokaPoker'
+import { ShizuokaPokerGame, GameState, ShizuokaPokerAI, ICard, pokerHandInfo } from './ShizuokaPoker'
+// import Card from 'react-playing-card';
+// import { Card, RANKS, SUITS } from 'react-playing-cards';
+import Card from './components/Card'
 
 interface IProps {
   moves: any;
@@ -69,8 +72,8 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
 
   const tboard = props.G.board.map((c, i) => {
     return (
-      <td style={cellStyle} key={i} onClick={() => toggleBoardCard(c)}>
-        {c}
+      <td key={i} onClick={() => toggleBoardCard(c)}>
+        <Card rank={c[0]} suit={c[1]} />
       </td>
     )
   });
@@ -85,11 +88,16 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
       </td>
     )
   })
+  const handInfo = pokerHandInfo(props.G.players[playerID].hand);
 
   const topponent = [0, 1, 2, 3, 4].map(i => {
-    const c = props.G.publicHands[opponentPlayer][i] || '';
+    const style: React.CSSProperties = { ...cellStyle };
+    const c = props.G.publicHands[opponentPlayer][i];
+    if (!c) {
+      style.backgroundColor = 'gray'
+    }
     return (
-      <td style={cellStyle} key={i} >
+      <td style={style} key={i} >
         {c}
       </td>
     )
@@ -108,6 +116,7 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
       <table id="board"><tbody><tr>{tboard}</tr></tbody></table>
       <p>hand</p>
       <table id="hand"><tbody><tr>{thand}</tr></tbody></table>
+      <p>hand: {`${handInfo.name} (rank ${handInfo.rank}, cardRank ${handInfo.cardRank})`}</p>
       <table id="trash"><tbody><tr>
         <td style={trashStyle} key="0" onClick={() => toggleTrash()}>Trash</td>
       </tr></tbody></table>

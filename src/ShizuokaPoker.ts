@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import { Game, PlayerView, IGameCtx } from 'boardgame.io/core';
 import { AI, IAIMoveObj } from 'boardgame.io/ai'
+import { Hand as PokerHand } from 'pokersolver'
 import assert from 'power-assert';
 
 export type ICard = string;
@@ -19,7 +20,7 @@ export type GameState = {
 
 // card helpers
 
-const CARD_NUMS: string[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K'];
+export const CARD_NUMS: string[] = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
 const CARD_SUITS: string[] = ['s', 'd', 'h', 'c'];
 const makeCard = (cardNum: string, cardSuit: string): ICard => `${cardNum}${cardSuit}`
 
@@ -33,14 +34,14 @@ const moveCard = (src: ICard[], card: ICard, dest: ICard[]) => {
 const change = (G: GameState, ctx: IGameCtx, myHandCard: ICard, boardCard: ICard) => {
   const hand = G.players[ctx.currentPlayer].hand;
   const publicHand = G.publicHands[ctx.currentPlayer];
-  assert(hand.includes(myHandCard));
-
   const board = G.board;
-  assert(board.includes(boardCard));
 
-  moveCard(hand, myHandCard, board);
-  _.pull(publicHand, myHandCard);
-  moveCard(board, boardCard, hand);
+  const myHandIndex = hand.indexOf(myHandCard);
+  assert(myHandIndex !== -1);
+  const boardIndex = board.indexOf(boardCard);
+  assert(boardIndex !== -1);
+  board[boardIndex] = myHandCard;
+  hand[myHandIndex] = boardCard;
   publicHand.push(boardCard);
 }
 
@@ -52,17 +53,24 @@ const throwAndChange = (G: GameState, ctx: IGameCtx, myHandCard: ICard, boardCar
 
   const hand = G.players[ctx.currentPlayer].hand;
   const publicHand = G.publicHands[ctx.currentPlayer];
+  const board = G.board;
+
   assert(hand.includes(myHandCard));
 
-  const board = G.board;
   assert(board.includes(boardCard));
 
-  const deck = G.secret.deck;
+  const myHandIndex = hand.indexOf(myHandCard);
+  assert(myHandIndex !== -1);
+  const boardIndex = board.indexOf(boardCard);
+  assert(boardIndex !== -1);
 
-  moveCard(hand, myHandCard, board);
+  const deck = G.secret.deck;
+  const newCard = deck.pop()!
+
+  G.trash.push(boardCard);
+  board[boardIndex] = myHandCard;
+  hand[myHandIndex] = newCard;
   _.pull(publicHand, myHandCard);
-  moveCard(board, boardCard, G.trash);
-  hand.push(deck.pop()!)
 }
 
 export const ShizuokaPokerGame = Game<GameState>({
@@ -74,7 +82,6 @@ export const ShizuokaPokerGame = Game<GameState>({
         allCards.push(makeCard(n, s));
       });
     });
-    allCards.push(CARD_NUMS[0])
     const deck = _.shuffle(allCards);
     const board: ICard[] = [];
     const p0Hand: ICard[] = [];
@@ -107,7 +114,7 @@ export const ShizuokaPokerGame = Game<GameState>({
   moves: {
     change,
     throwAndChange,
-    skip: (G) => { console.log('skip!') },
+    skip: (G) => G,//{ console.log('skip!') },
     stop: (G) => { G.stopped = true },
   },
   flow: {
@@ -149,3 +156,12 @@ export const ShizuokaPokerAI = AI<GameState>({
     return moves;
   },
 })
+
+export const pokerHandInfo = (hand: ICard[]) => {
+  const pokerHand = PokerHand.solve(hand)
+  return {
+    name: pokerHand.name,
+    rank: pokerHand.rank,
+    cardRank: (pokerHand as any).cards[0].rank,
+  }
+}
