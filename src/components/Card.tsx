@@ -1,12 +1,13 @@
 import React from 'react';
 
 interface IProps {
-  rank: string;
-  suit: string;
+  card: string;
 }
 const Card: React.FC<IProps> = (props) => {
-  const rankForCardsJS = props.rank === 'T' ? '10' : props.rank
-  const suitForCardJS = props.suit.toUpperCase()
+  const rank = props.card[0]
+  const suit = props.card[1]
+  const rankForCardsJS = rank === 'T' ? '10' : rank
+  const suitForCardJS = suit.toUpperCase()
   return (
     <img className='card' src={`https://unpkg.com/cardsJS/dist/cards/${rankForCardsJS}${suitForCardJS}.svg`} />
   )

@@ -9,6 +9,7 @@ import { ShizuokaPokerGame, GameState, ShizuokaPokerAI, ICard, pokerHandInfo } f
 // import Card from 'react-playing-card';
 // import { Card, RANKS, SUITS } from 'react-playing-cards';
 import Card from './components/Card'
+import BackCard from './components/BackCard'
 
 interface IProps {
   moves: any;
@@ -73,18 +74,16 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
   const tboard = props.G.board.map((c, i) => {
     return (
       <td key={i} onClick={() => toggleBoardCard(c)}>
-        <Card rank={c[0]} suit={c[1]} />
+        <Card card={c} />
       </td>
     )
   });
   const thand = props.G.players[playerID].hand.map((c, i) => {
-    const style: React.CSSProperties = { ...cellStyle };
-    if (!props.G.publicHands[playerID].includes(c)) {
-      style.backgroundColor = 'gray'
-    }
+    const visible = props.G.publicHands[playerID].includes(c)
     return (
-      <td style={style} key={i} onClick={() => toggleMyCard(c)}>
-        {c}
+      <td key={i} onClick={() => toggleMyCard(c)}>
+        <p>{visible ? 'public' : 'hidden'}</p>
+        {<Card card={c} />}
       </td>
     )
   })
@@ -97,8 +96,8 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
       style.backgroundColor = 'gray'
     }
     return (
-      <td style={style} key={i} >
-        {c}
+      <td key={i}>
+        {c ? <Card card={c} /> : <BackCard />}
       </td>
     )
   })
