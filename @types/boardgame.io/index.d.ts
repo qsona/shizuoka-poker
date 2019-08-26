@@ -103,7 +103,7 @@ declare module 'boardgame.io/react' {
     game: any;
     numPlayer?: number;
     board?: React.ReactNode;
-    multiplayer?: { server: string };
+    multiplayer?: { server: string } | { local: boolean };
     debug?: boolean;
     ai?: any;
   }

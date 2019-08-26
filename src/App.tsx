@@ -134,7 +134,7 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
 const App: any = Client({
   game: ShizuokaPokerGame,
   board: ShizuokaPokerBoard,
-  multiplayer: { server: 'localhost:8000' },
+  multiplayer: { local: true },
   ai: ShizuokaPokerAI,
 });
 
