@@ -2,6 +2,7 @@ import React from 'react';
 
 interface IProps {
   card: string;
+  isPublic?: boolean;
 }
 const Card: React.FC<IProps> = (props) => {
   const rank = props.card[0]
@@ -9,7 +10,7 @@ const Card: React.FC<IProps> = (props) => {
   const rankForCardsJS = rank === 'T' ? '10' : rank
   const suitForCardJS = suit.toUpperCase()
   return (
-    <img className='card' src={`https://unpkg.com/cardsJS/dist/cards/${rankForCardsJS}${suitForCardJS}.svg`} />
+    <img className='card' style={{ opacity: props.isPublic ? 1 : 0.4 }} src={`https://unpkg.com/cardsJS/dist/cards/${rankForCardsJS}${suitForCardJS}.svg`} />
   )
 };
 

@@ -79,11 +79,10 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
     )
   });
   const thand = props.G.players[playerID].hand.map((c, i) => {
-    const visible = props.G.publicHands[playerID].includes(c)
+    const isPublic = props.G.publicHands[playerID].includes(c)
     return (
       <td key={i} onClick={() => toggleMyCard(c)}>
-        <p>{visible ? 'public' : 'hidden'}</p>
-        {<Card card={c} />}
+        {<Card card={c} isPublic={isPublic} />}
       </td>
     )
   })
