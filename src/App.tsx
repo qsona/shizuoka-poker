@@ -116,7 +116,7 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
       <table id="hand"><tbody><tr>{thand}</tr></tbody></table>
       <p>hand: {`${handInfo.name} (rank ${handInfo.rank}, cardRank ${handInfo.cardRank})`}</p>
       <table id="trash"><tbody><tr>
-        <td style={trashStyle} key="0" onClick={() => toggleTrash()}>Trash</td>
+        <td style={trashStyle} key="0" onClick={() => toggleTrash()}>Deck</td>
       </tr></tbody></table>
 
 
