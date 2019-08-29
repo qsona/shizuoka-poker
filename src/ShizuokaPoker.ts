@@ -186,7 +186,7 @@ export const ShizuokaPokerGame = Game<GameState>({
     phases: {
       change: {
         allowedMoves: ['change', 'throwAndChange'],
-        endPhaseIf: (G, ctx) => true, // ctx.turn >= 2,
+        endPhaseIf: (G, ctx) => ctx.turn >= 4,
         next: 'stoppableChange',
       },
       stoppableChange: {

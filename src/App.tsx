@@ -125,23 +125,28 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
       <table id="board"><tbody><tr>{tboard}</tr></tbody></table>
       <table id="operation"><tbody><tr>
         {
+          ctx.currentPlayer === playerID ?
+            <td style={operationStyle(true)} key="-1">YOUR TURN</td> :
+            <td style={operationStyle(false)} key="-1">Waiting...</td>
+        }
+        {
           ctx.allowedMoves.includes('throwAndChange') &&
           <td style={operationStyle(isTrashSelected)} key="0" onClick={() => toggleTrash()}>Deck</td>
         }
         {
-          ctx.allowedMoves.includes('stop') &&
+          ctx.currentPlayer === playerID && ctx.allowedMoves.includes('stop') &&
           <td style={operationStyle(false)} key="1" onClick={() => moves.stop()}>Stop</td>
         }
         {
           G.stopped &&
-          <td style={operationStyle(true)} key="2">!!!!STOPPED!!!!</td>
+          <td style={operationStyle(true)} key="2">STOPPED!</td>
         }
         {
-          ctx.allowedMoves.includes('skip') &&
+          ctx.currentPlayer === playerID && ctx.allowedMoves.includes('skip') &&
           <td style={operationStyle(false)} key="3" onClick={() => moves.skip()}>Skip</td>
         }
         {
-          ctx.allowedMoves.includes('guess') &&
+          ctx.currentPlayer === playerID && ctx.allowedMoves.includes('guess') &&
           <td style={operationStyle(false)} key="4">
             <select value={selectedGuessRank} onChange={handleGuessRankChange}>
               <option value="1">High Card</option>
@@ -176,7 +181,6 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
           ctx.gameover &&
           <td style={operationStyle(false)} key="5">
             {ctx.gameover.winner === playerID ? 'YOU WIN!' : ctx.gameover.draw ? 'DRAW' : 'YOU LOSE!'} <br />
-            {JSON.stringify(G.result!)}
           </td>
         }
       </tr></tbody></table>
@@ -190,18 +194,30 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
 const App: any = Client({
   game: ShizuokaPokerGame,
   board: ShizuokaPokerBoard,
-  multiplayer: { local: true },
+  multiplayer: { server: 'localhost:8000' },
   ai: ShizuokaPokerAI,
 });
 
 const RealApp: React.FC = () => {
+  const [playerID, setPlayerID] = useState<string | null>(null);
+  if (playerID == null) {
+    return (
+      <div>
+        <p>Play as</p>
+        <button onClick={() => setPlayerID("0")}>
+          Player 0
+        </button>
+        <button onClick={() => setPlayerID("1")}>
+          Player 1
+        </button>
+      </div>
+    );
+  }
   return (
     <div>
-      <App gameID="gameid" playerID="0"></App>
-      <p>================================</p>
-      <App gameID="gameid" playerID="1"></App>
+      <App playerID={playerID} />
     </div>
-  )
+  );
 }
 
 export default RealApp;
