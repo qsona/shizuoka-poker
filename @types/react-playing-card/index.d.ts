@@ -8,12 +8,3 @@ declare module 'react-playing-card' {
 
   }
 }
-//{
-//   //export default class Card extends React.Component<any, any> { };
-//   export class Card {
-//     static solve(cards: string[]): Hand
-
-//     name(): string
-//     rank(): number
-//   }
-//

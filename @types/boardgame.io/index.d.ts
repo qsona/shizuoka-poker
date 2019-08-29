@@ -61,9 +61,10 @@ declare module 'boardgame.io/core' {
     [key: string]: (G: TGameState, ctx: IGameCtx, ...args: any[]) => void;
   }
   interface IGameFlowPhase<TGameState> {
-    name: string;
+    next?: string;
     allowedMoves: string[];
-    endPhaseIf: (G: TGameState, ctx: IGameCtx) => boolean;
+    endPhaseIf?: (G: TGameState, ctx: IGameCtx) => boolean;
+    endGameIf?: (G: TGameState, ctx: IGameCtx) => any;
   }
   interface IGameFlowTrigger<TGameState> {
     conditon: (G: TGameState, ctx: IGameCtx) => boolean;
@@ -71,11 +72,12 @@ declare module 'boardgame.io/core' {
   }
   interface IGameFlow<TGameState> {
     movesPerTurn?: number;
-    endGameIf: (G: TGameState, ctx: IGameCtx) => any;
+    endGameIf?: (G: TGameState, ctx: IGameCtx) => any;
     endTurnIf?: (G: TGameState, ctx: IGameCtx) => boolean;
     onTurnEnd?: (G: TGameState, ctx: IGameCtx) => void;
     triggers?: IGameFlowTrigger<TGameState>[];
-    phases?: IGameFlowPhase<TGameState>[];
+    startingPhase?: string;
+    phases?: { [key: string]: IGameFlowPhase<TGameState> };
     optimisticUpdate?: (G: TGameState, ctx: IGameCtx, move: any) => boolean;
   }
   interface IGameArgs<TGameState> {

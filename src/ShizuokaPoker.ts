@@ -7,7 +7,8 @@ import assert from 'power-assert';
 export type ICard = string;
 
 type ISecretState = { deck: ICard[] };
-type IPlayerState = { hand: ICard[] };
+type IGuess = { rank: number, cardRank: number };
+type IPlayerState = { hand: ICard[], guess: IGuess | null };
 
 export type GameState = {
   secret: ISecretState,
@@ -18,18 +19,9 @@ export type GameState = {
   stopped: boolean,
 }
 
-// card helpers
-
 export const CARD_NUMS: string[] = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
 const CARD_SUITS: string[] = ['s', 'd', 'h', 'c'];
 const makeCard = (cardNum: string, cardSuit: string): ICard => `${cardNum}${cardSuit}`
-
-const moveCard = (src: ICard[], card: ICard, dest: ICard[]) => {
-  const i = src.indexOf(card);
-  assert(i !== -1);
-  _.pullAt(src, i);
-  dest.push(card);
-}
 
 const change = (G: GameState, ctx: IGameCtx, myHandCard: ICard, boardCard: ICard) => {
   const hand = G.players[ctx.currentPlayer].hand;
@@ -42,6 +34,7 @@ const change = (G: GameState, ctx: IGameCtx, myHandCard: ICard, boardCard: ICard
   assert(boardIndex !== -1);
   board[boardIndex] = myHandCard;
   hand[myHandIndex] = boardCard;
+  _.pull(publicHand, myHandCard);
   publicHand.push(boardCard);
 }
 
@@ -73,6 +66,14 @@ const throwAndChange = (G: GameState, ctx: IGameCtx, myHandCard: ICard, boardCar
   _.pull(publicHand, myHandCard);
 }
 
+const guess = (G: GameState, ctx: IGameCtx, rank: number, cardRank: number) => {
+
+};
+
+const endGame = (G: GameState, ctx: IGameCtx) => {
+  return { winner: '0' };
+};
+
 export const ShizuokaPokerGame = Game<GameState>({
   name: 'shizuoka-poker',
   setup: () => {
@@ -103,9 +104,11 @@ export const ShizuokaPokerGame = Game<GameState>({
       players: {
         '0': {
           hand: p0Hand,
+          guess: null,
         },
         '1': {
           hand: p1Hand,
+          guess: null,
         },
       },
       stopped: false,
@@ -114,32 +117,37 @@ export const ShizuokaPokerGame = Game<GameState>({
   moves: {
     change,
     throwAndChange,
-    skip: (G) => G,//{ console.log('skip!') },
+    skip: () => { },
+    guess,
     stop: (G) => { G.stopped = true },
   },
   flow: {
     movesPerTurn: 1,
-    // endTurnIf: () => { console.log('endTurnif'); return true },
     optimisticUpdate: () => false,
-    phases: [
-      // {
-      //   name: 'change',
-      //   allowedMoves: ['change', 'throwAndChange', 'skip'],
-      //   endPhaseIf: (G, ctx) => ctx.turn === 6,
-      // },
-      {
-        name: 'stoppableChange',
-        allowedMoves: ['change', 'throwAndChange', 'skip', 'stop'],
-        endPhaseIf: (G) => G.stopped,
+    startingPhase: 'change',
+    phases: {
+      change: {
+        allowedMoves: ['change', 'throwAndChange'],
+        endPhaseIf: (G, ctx) => ctx.turn >= 2,
+        next: 'stoppableChange',
       },
-      {
-        name: 'lastChange',
+      stoppableChange: {
+        allowedMoves: ['change', 'throwAndChange', 'stop'],
+        endPhaseIf: (G) => G.stopped,
+        next: 'lastChange',
+      },
+      lastChange: {
         allowedMoves: ['change', 'throwAndChange', 'skip'],
         endPhaseIf: () => true, // TODO
+        next: 'guess',
       },
-    ],
+      guess: {
+        allowedMoves: ['guess'],
+        endGameIf: (G) => G.players['0'].guess && G.players['1'].guess,
+      },
+    },
     endGameIf: (G, ctx) => {
-    }
+    },
   },
   playerView: PlayerView.STRIP_SECRETS
 })

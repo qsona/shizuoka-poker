@@ -21,7 +21,7 @@ interface IProps {
 }
 
 const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
-  const playerID = props.playerID;
+  const { playerID, G, ctx, moves } = props;
   console.log(props)
   const [selectedBoardCard, setSelectedBoardCard] = useState<ICard | null>(null);
   const [selectedMyCard, setSelectedMyCard] = useState<ICard | null>(null);
@@ -49,9 +49,9 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
       // TODO: move!
       console.log("change to card")
       if (isTrashSelected) {
-        props.moves.throwAndChange(selectedMyCard, selectedBoardCard)
+        moves.throwAndChange(selectedMyCard, selectedBoardCard)
       } else {
-        props.moves.change(selectedMyCard, selectedBoardCard)
+        moves.change(selectedMyCard, selectedBoardCard)
       }
       resetSelectedCards()
     }
@@ -71,32 +71,32 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
     textAlign: 'center',
   };
 
-  const tboard = props.G.board.map((c, i) => {
+  const tboard = G.board.map((c, i) => {
     return (
       <td key={i} onClick={() => toggleBoardCard(c)}>
-        <Card card={c} />
+        <Card card={c} isPublic={true} isSelected={c === selectedBoardCard} />
       </td>
     )
   });
-  const thand = props.G.players[playerID].hand.map((c, i) => {
-    const isPublic = props.G.publicHands[playerID].includes(c)
+  const thand = G.players[playerID].hand.map((c, i) => {
+    const isPublic = G.publicHands[playerID].includes(c)
     return (
       <td key={i} onClick={() => toggleMyCard(c)}>
-        {<Card card={c} isPublic={isPublic} />}
+        {<Card card={c} isPublic={isPublic} isSelected={c === selectedMyCard} />}
       </td>
     )
   })
-  const handInfo = pokerHandInfo(props.G.players[playerID].hand);
+  const handInfo = pokerHandInfo(G.players[playerID].hand);
 
   const topponent = [0, 1, 2, 3, 4].map(i => {
     const style: React.CSSProperties = { ...cellStyle };
-    const c = props.G.publicHands[opponentPlayer][i];
+    const c = G.publicHands[opponentPlayer][i];
     if (!c) {
       style.backgroundColor = 'gray'
     }
     return (
       <td key={i}>
-        {c ? <Card card={c} /> : <BackCard />}
+        {c ? <Card card={c} isPublic={true} /> : <BackCard />}
       </td>
     )
   })
@@ -112,12 +112,12 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
       <table id="opponent"><tbody><tr>{topponent}</tr></tbody></table>
       <p>board</p>
       <table id="board"><tbody><tr>{tboard}</tr></tbody></table>
-      <p>hand</p>
-      <table id="hand"><tbody><tr>{thand}</tr></tbody></table>
-      <p>hand: {`${handInfo.name} (rank ${handInfo.rank}, cardRank ${handInfo.cardRank})`}</p>
       <table id="trash"><tbody><tr>
         <td style={trashStyle} key="0" onClick={() => toggleTrash()}>Deck</td>
       </tr></tbody></table>
+      <p>hand</p>
+      <table id="hand"><tbody><tr>{thand}</tr></tbody></table>
+      <p>hand: {`${handInfo.name} (rank ${handInfo.rank}, cardRank ${handInfo.cardRank})`}</p>
 
 
       <p>---logs---</p>
