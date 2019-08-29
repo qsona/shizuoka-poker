@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { Game, PlayerView, IGameCtx } from 'boardgame.io/core';
+import { Game, PlayerView, IGameCtx, IPlayer } from 'boardgame.io/core';
 import { AI, IAIMoveObj } from 'boardgame.io/ai'
 import { Hand as PokerHand } from 'pokersolver'
 import assert from 'power-assert';
@@ -10,6 +10,14 @@ type ISecretState = { deck: ICard[] };
 type IGuess = { rank: number, cardRank: number };
 type IPlayerState = { hand: ICard[], guess: IGuess | null };
 
+type Result = {
+  [key: string]: {
+    guessPoint: number,
+    rank: number,
+    cardRank: number,
+  }
+}
+
 export type GameState = {
   secret: ISecretState,
   board: ICard[],
@@ -17,6 +25,8 @@ export type GameState = {
   publicHands: { '0': ICard[], '1': ICard[] },
   players: { '0': IPlayerState, '1': IPlayerState },
   stopped: boolean,
+  lastChangeFinished: boolean,
+  result?: Result | undefined,
 }
 
 export const CARD_NUMS: string[] = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
@@ -36,6 +46,10 @@ const change = (G: GameState, ctx: IGameCtx, myHandCard: ICard, boardCard: ICard
   hand[myHandIndex] = boardCard;
   _.pull(publicHand, myHandCard);
   publicHand.push(boardCard);
+
+  if (ctx.phase === 'lastChange') {
+    G.lastChangeFinished = true;
+  }
 }
 
 const throwAndChange = (G: GameState, ctx: IGameCtx, myHandCard: ICard, boardCard: ICard) => {
@@ -64,14 +78,57 @@ const throwAndChange = (G: GameState, ctx: IGameCtx, myHandCard: ICard, boardCar
   board[boardIndex] = myHandCard;
   hand[myHandIndex] = newCard;
   _.pull(publicHand, myHandCard);
+
+  if (ctx.phase === 'lastChange') {
+    G.lastChangeFinished = true;
+  }
 }
 
-const guess = (G: GameState, ctx: IGameCtx, rank: number, cardRank: number) => {
+const calcCardRank = (pokerHand: any) => pokerHand.cards[0].rank;
 
+const guess = (G: GameState, ctx: IGameCtx, rank: number, cardRank: number) => {
+  G.players[ctx.currentPlayer].guess = { rank, cardRank };
+  if (!G.players['0'] || !G.players['1']) return; // TODO: hack that prevent client-side calculation
+
+  if (G.players['0'].guess && G.players['1'].guess) {
+    const pokerHand0 = PokerHand.solve(G.players['0'].hand)
+    const pokerHand1 = PokerHand.solve(G.players['1'].hand)
+
+    const guessPoint0 = guessPoint(G.players['0'].guess!, pokerHand1);
+    const guessPoint1 = guessPoint(G.players['1'].guess!, pokerHand0);
+
+    G.result = {
+      '0': {
+        guessPoint: guessPoint0,
+        rank: pokerHand0.rank,
+        cardRank: calcCardRank(pokerHand0),
+      },
+      '1': {
+        guessPoint: guessPoint1,
+        rank: pokerHand1.rank,
+        cardRank: calcCardRank(pokerHand1),
+      },
+    }
+  }
 };
 
+const guessPoint = (myGuess: IGuess, opponentPokerHand: PokerHand) => {
+  return myGuess.rank !== opponentPokerHand.rank ? 0 :
+    myGuess.cardRank !== calcCardRank(opponentPokerHand) ? 1 : 2;
+}
+
 const endGame = (G: GameState, ctx: IGameCtx) => {
-  return { winner: '0' };
+  const result = G.result!;
+  const winner: IPlayer | null =
+    result['0'].guessPoint > result['1'].guessPoint ? '0' :
+      result['0'].guessPoint < result['1'].guessPoint ? '1' :
+        result['0'].rank > result['1'].rank ? '0' :
+          result['0'].rank < result['1'].rank ? '1' :
+            result['0'].cardRank > result['1'].cardRank ? '0' :
+              result['0'].cardRank < result['1'].cardRank ? '1' :
+                null;
+
+  return winner ? { winner } : { draw: true };
 };
 
 export const ShizuokaPokerGame = Game<GameState>({
@@ -112,12 +169,13 @@ export const ShizuokaPokerGame = Game<GameState>({
         },
       },
       stopped: false,
+      lastChangeFinished: false,
     };
   },
   moves: {
     change,
     throwAndChange,
-    skip: () => { },
+    skip: (G) => { G.lastChangeFinished = true },
     guess,
     stop: (G) => { G.stopped = true },
   },
@@ -128,7 +186,7 @@ export const ShizuokaPokerGame = Game<GameState>({
     phases: {
       change: {
         allowedMoves: ['change', 'throwAndChange'],
-        endPhaseIf: (G, ctx) => ctx.turn >= 2,
+        endPhaseIf: (G, ctx) => true, // ctx.turn >= 2,
         next: 'stoppableChange',
       },
       stoppableChange: {
@@ -138,12 +196,16 @@ export const ShizuokaPokerGame = Game<GameState>({
       },
       lastChange: {
         allowedMoves: ['change', 'throwAndChange', 'skip'],
-        endPhaseIf: () => true, // TODO
+        endPhaseIf: (G) => G.lastChangeFinished, // TODO
         next: 'guess',
       },
       guess: {
         allowedMoves: ['guess'],
-        endGameIf: (G) => G.players['0'].guess && G.players['1'].guess,
+        endGameIf: (G, ctx) => {
+          if (G.players['0'].guess && G.players['1'].guess) {
+            return endGame(G, ctx);
+          }
+        }
       },
     },
     endGameIf: (G, ctx) => {

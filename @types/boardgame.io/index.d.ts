@@ -56,6 +56,8 @@ declare module 'boardgame.io/core' {
     currentPlayer: IPlayer;
     currentPlayerMoves: number;
     gameover?: any;
+    phase: string;
+    allowedMoves: string[];
   }
   interface IGameMoves<TGameState> {
     [key: string]: (G: TGameState, ctx: IGameCtx, ...args: any[]) => void;

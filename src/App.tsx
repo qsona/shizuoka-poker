@@ -1,5 +1,4 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 import { useState, useEffect } from 'react';
@@ -27,6 +26,20 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
   const [selectedMyCard, setSelectedMyCard] = useState<ICard | null>(null);
   const [isTrashSelected, setTrashSelected] = useState<boolean>(false);
 
+  const [selectedGuessRank, setSelectedGuessRank] = useState<number>(9);
+  const [selectedGuessCardRank, setSelectedGuessCardRank] = useState<number>(14);
+  const handleGuessRankChange = (e: any) => {
+    const value = +e.target.value;
+    setSelectedGuessRank(value);
+  }
+  const handleGuessCardRankChange = (e: any) => {
+    const value = +e.target.value;
+    setSelectedGuessCardRank(value);
+  }
+  const handleGuessDecide = () => {
+    moves.guess(selectedGuessRank, selectedGuessCardRank);
+  }
+
   const opponentPlayer: IPlayer = playerID === '0' ? '1' : '0';
 
   function toggleMyCard(card: ICard) {
@@ -34,8 +47,6 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
   }
 
   function toggleBoardCard(card: ICard) {
-    console.log(card)
-    console.log(card === selectedBoardCard)
     setSelectedBoardCard(card === selectedBoardCard ? null : card);
   }
 
@@ -44,10 +55,7 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
   }
 
   useEffect(() => {
-    console.log(`${selectedBoardCard} ${selectedMyCard}`)
     if (selectedMyCard && selectedBoardCard) {
-      // TODO: move!
-      console.log("change to card")
       if (isTrashSelected) {
         moves.throwAndChange(selectedMyCard, selectedBoardCard)
       } else {
@@ -101,9 +109,12 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
     )
   })
 
-  const trashStyle = { ...cellStyle };
-  if (isTrashSelected) {
-    trashStyle.backgroundColor = 'pink';
+  const operationStyle = (isSelected: boolean) => {
+    const style = { ...cellStyle };
+    if (isSelected) {
+      style.backgroundColor = 'pink';
+    }
+    return style;
   }
 
   return (
@@ -112,21 +123,66 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
       <table id="opponent"><tbody><tr>{topponent}</tr></tbody></table>
       <p>board</p>
       <table id="board"><tbody><tr>{tboard}</tr></tbody></table>
-      <table id="trash"><tbody><tr>
-        <td style={trashStyle} key="0" onClick={() => toggleTrash()}>Deck</td>
+      <table id="operation"><tbody><tr>
+        {
+          ctx.allowedMoves.includes('throwAndChange') &&
+          <td style={operationStyle(isTrashSelected)} key="0" onClick={() => toggleTrash()}>Deck</td>
+        }
+        {
+          ctx.allowedMoves.includes('stop') &&
+          <td style={operationStyle(false)} key="1" onClick={() => moves.stop()}>Stop</td>
+        }
+        {
+          G.stopped &&
+          <td style={operationStyle(true)} key="2">!!!!STOPPED!!!!</td>
+        }
+        {
+          ctx.allowedMoves.includes('skip') &&
+          <td style={operationStyle(false)} key="3" onClick={() => moves.skip()}>Skip</td>
+        }
+        {
+          ctx.allowedMoves.includes('guess') &&
+          <td style={operationStyle(false)} key="4">
+            <select value={selectedGuessRank} onChange={handleGuessRankChange}>
+              <option value="1">High Card</option>
+              <option value="2">One Pair</option>
+              <option value="3">Two Pair</option>
+              <option value="4">Three of a kind</option>
+              <option value="5">Straight</option>
+              <option value="6">Flush</option>
+              <option value="7">Full house</option>
+              <option value="8">Four of a kind</option>
+              <option value="9">Straight flush</option>
+            </select>
+            <select value={selectedGuessCardRank} onChange={handleGuessCardRankChange}>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+              <option value="11">J</option>
+              <option value="12">Q</option>
+              <option value="13">K</option>
+              <option value="14">A</option>
+            </select>
+            <button onClick={handleGuessDecide}>Guess!</button>
+          </td>
+        }
+        {
+          ctx.gameover &&
+          <td style={operationStyle(false)} key="5">
+            {ctx.gameover.winner === playerID ? 'YOU WIN!' : ctx.gameover.draw ? 'DRAW' : 'YOU LOSE!'} <br />
+            {JSON.stringify(G.result!)}
+          </td>
+        }
       </tr></tbody></table>
       <p>hand</p>
       <table id="hand"><tbody><tr>{thand}</tr></tbody></table>
       <p>hand: {`${handInfo.name} (rank ${handInfo.rank}, cardRank ${handInfo.cardRank})`}</p>
-
-
-      <p>---logs---</p>
-
-      <p>board: {JSON.stringify(props.G.board)}</p>
-      <p>hand: {JSON.stringify(props.G.players[playerID].hand)}</p>
-      <p>publicHand 0: {JSON.stringify(props.G.publicHands[0])}</p>
-      <p>publicHand 1: {JSON.stringify(props.G.publicHands[1])}</p>
-      <p>trash: {JSON.stringify(props.G.trash)}</p>
     </div>
   );
 }
