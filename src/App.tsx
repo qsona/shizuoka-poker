@@ -155,19 +155,19 @@ const ShizuokaPokerBoard: React.FC<IProps> = (props) => {
               <option value="9">Straight flush</option>
             </select>
             <select value={selectedGuessCardRank} onChange={handleGuessCardRankChange}>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
-              <option value="7">7</option>
-              <option value="8">8</option>
-              <option value="9">9</option>
-              <option value="10">10</option>
-              <option value="11">J</option>
-              <option value="12">Q</option>
-              <option value="13">K</option>
-              <option value="14">A</option>
+              <option value="1">2</option>
+              <option value="2">3</option>
+              <option value="3">4</option>
+              <option value="4">5</option>
+              <option value="5">6</option>
+              <option value="6">7</option>
+              <option value="7">8</option>
+              <option value="8">9</option>
+              <option value="9">10</option>
+              <option value="10">J</option>
+              <option value="11">Q</option>
+              <option value="12">K</option>
+              <option value="13">A</option>
             </select>
             <button onClick={handleGuessDecide}>Guess!</button>
           </td>
