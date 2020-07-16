@@ -10,7 +10,7 @@
     "@types/react": "16.8.17",
     "@types/react-dom": "16.8.4",
     "boardgame.io": "^0.31.5",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.19",
     "pokersolver": "^2.1.2",
     "power-assert": "^1.6.1",
     "react": "^16.8.6",
